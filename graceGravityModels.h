@@ -8,15 +8,13 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#ifndef GTO_TOOLS_GRACE_GRAVITY_MODELS_H
-#define GTO_TOOLS_GRACE_GRAVITY_MODELS_H
+#ifndef TESP_GRACE_GRAVITY_MODELS_H
+#define TESP_GRACE_GRAVITY_MODELS_H
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 // #include "tudat/Tudat/SimulationSetup/EnvironmentSetup/createGravityField.h"
 
-namespace gto_utilities {
-
-namespace environment {
+namespace tesp {
 
 //! List of GRACE gravity field models available
 /*!
@@ -57,7 +55,6 @@ private:
 
 };
 
-} // namespace environment
-} // namespace gto_utilities
+} // namespace tesp
 
-#endif // GTO_TOOLS_GRACE_GRAVITY_MODELS_H
+#endif // TESP_GRACE_GRAVITY_MODELS_H

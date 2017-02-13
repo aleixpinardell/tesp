@@ -12,21 +12,17 @@
 
 #include "inputOutput.h"
 
-namespace gto_utilities {
-
-namespace environment {
+namespace tesp {
 
 //! Function to create a gravity field model based on a GRACE model.
 tudat::simulation_setup::SphericalHarmonicsGravityFieldSettings
 GraceGravityFieldSettings::createGravityFieldSettingsForGraceModel( const GraceGravityModel graceGravityModel )
 {
-    using namespace input_output;
-
     std::string filename;
     switch ( graceGravityModel ) {
         case ggm02c: filename = "GGM02C.txt"; break;
         case ggm02s: filename = "GGM02S.txt"; break;
-        default: std::runtime_error( "GRACE gravity model not recognised" );
+        default: throw std::runtime_error( "GRACE gravity model not recognised" );
     }
     Eigen::MatrixXd coefficients = tudat::input_output::readMatrixFromFile( __DIR__ + filename );
 
@@ -49,5 +45,4 @@ GraceGravityFieldSettings::createGravityFieldSettingsForGraceModel( const GraceG
                 gravitationalParameter, referenceRadius, cosineCoefficients, sineCoefficients, "IAU_Earth" );
 }
 
-} // namespace environment
-} // namespace gto_utilities
+} // namespace tesp

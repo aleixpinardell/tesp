@@ -10,9 +10,7 @@
 
 #include "tabulatedDragCoefficients.h"
 
-namespace gto_utilities {
-
-namespace environment {
+namespace tesp {
 
 //! Function to read the altitude and drag coefficients from a file.
 std::pair< std::vector< double >, std::vector< Eigen::Vector3d > > readAltitudesAndDragCoefficientsFromFile(
@@ -40,5 +38,4 @@ std::pair< std::vector< double >, std::vector< Eigen::Vector3d > > readAltitudes
     return altitudesAndAerodynamicCoefficients;
 }
 
-} // namespace environment
-} // namespace gto_utilities
+} // namespace tesp

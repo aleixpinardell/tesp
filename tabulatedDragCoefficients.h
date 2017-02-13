@@ -8,18 +8,15 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#ifndef GTO_TOOLS_TABULATED_DRAG_COEFFICIENTS_H
-#define GTO_TOOLS_TABULATED_DRAG_COEFFICIENTS_H
+#ifndef TESP_TABULATED_DRAG_COEFFICIENTS_H
+#define TESP_TABULATED_DRAG_COEFFICIENTS_H
 
 #include <string>
 #include <vector>
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
-// #include "tudat/Tudat/SimulationSetup/EnvironmentSetup/createGravityField.h"
 
-namespace gto_utilities {
-
-namespace environment {
+namespace tesp {
 
 //! Function to read the altitude and drag coefficients from a file.
 /*!
@@ -31,7 +28,6 @@ std::pair< std::vector< double >, std::vector< Eigen::Vector3d > > readAltitudes
         const std::string& filePath );
 
 
-} // namespace environment
-} // namespace gto_utilities
+} // namespace tesp
 
-#endif // GTO_TOOLS_TABULATED_DRAG_COEFFICIENTS_H
+#endif // TESP_TABULATED_DRAG_COEFFICIENTS_H

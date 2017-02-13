@@ -146,8 +146,8 @@ find_package(Eigen3 REQUIRED)
 
 # Include Eigen3 directories.
 # Set CMake flag to suppress Eigen warnings (platform-dependent solution).
+include_directories(SYSTEM AFTER "${EIGEN3_INCLUDE_DIR}")
 if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${EIGEN3_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${EIGEN3_INCLUDE_DIR}\"")
 endif()
@@ -169,8 +169,8 @@ find_package(Boost 1.45.0
 
 # Include Boost directories.
 # Set CMake flag to suppress Boost warnings (platform-dependent solution).
+include_directories(SYSTEM AFTER "${Boost_INCLUDE_DIRS}")
 if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${Boost_INCLUDE_DIRS}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${Boost_INCLUDE_DIRS}\"")
 endif()
@@ -182,7 +182,6 @@ find_package(Tudat 2.0 REQUIRED)
 # Set CMake flag to suppress Tudat warnings (platform-dependent solution).
 include_directories(SYSTEM AFTER "${TUDAT_INCLUDE_DIR}")
 if(NOT APPLE)
-  include_directories(SYSTEM AFTER "${TUDAT_INCLUDE_DIR}")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${TUDAT_INCLUDE_DIR}\"")
 endif()
@@ -191,8 +190,8 @@ endif()
   find_package(Spice)
 
   # Include CSpice directories.
+  include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
   if(NOT APPLE)
-    include_directories(SYSTEM AFTER "${SPICE_INCLUDE_DIR}")
   else( )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${SPICE_INCLUDE_DIR}\"")
   endif( )
@@ -208,8 +207,8 @@ else()
   find_package(NRLMSISE00)
 
   # Include NRLMSISE00 directories.
+  include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
   if(NOT APPLE)
-    include_directories(SYSTEM AFTER "${NRLMSISE00_INCLUDE_DIR}")
   else( )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem \"${NRLMSISE00_INCLUDE_DIR}\"")
   endif( )
@@ -234,38 +233,34 @@ list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat
     tudat_basic_astrodynamics tudat_input_output tudat_basic_mathematics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 
-#################################
-############## GTO ##############
-#################################
+###############################################
+#################### TESP #####################
+####### Tudat Earth Satellite Propagator ######
+###############################################
 
 # Set the source files.
-set(GTO_TOOLS_SOURCES
-    "${SRCROOT}/GTOUtilities/codeReader.cpp"
-    "${SRCROOT}/GTOUtilities/graceGravityModels.cpp"
-    "${SRCROOT}/GTOUtilities/tabulatedDragCoefficients.cpp"
+set(TESP_SOURCES
+    "${SRCROOT}/tespSettings.cpp"
+    "${SRCROOT}/graceGravityModels.cpp"
+    "${SRCROOT}/tabulatedDragCoefficients.cpp"
 )
 
 # Set the header files.
-set(GTO_TOOLS_HEADERS
-    "${SRCROOT}/GTOUtilities/inputOutput.h"
-    "${SRCROOT}/GTOUtilities/codeReader.h"
-    "${SRCROOT}/GTOUtilities/graceGravityModels.h"
-    "${SRCROOT}/GTOUtilities/tabulatedDragCoefficients.h"
+set(TESP_HEADERS
+    "${SRCROOT}/tespSettings.h"
+    "${SRCROOT}/inputOutput.h"
+    "${SRCROOT}/graceGravityModels.h"
+    "${SRCROOT}/tabulatedDragCoefficients.h"
 )
 
 # Add static library.
-add_library(gto_utilities STATIC ${GTO_TOOLS_SOURCES} ${GTO_TOOLS_HEADERS})
-setup_tudat_library_target(gto_utilities "${SRCROOT}/GTOUtilities/")
+add_library(tesp_library STATIC ${TESP_SOURCES} ${TESP_HEADERS})
+setup_tudat_library_target(tesp_library "${SRCROOT}/")
 
 
-# Add GTO_coded application
-add_executable(application_GTO_coded "${SRCROOT}/GTO_coded.cpp")
-setup_executable_target(application_GTO_coded "${SRCROOT}")
-target_link_libraries(application_GTO_coded ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} gto_utilities ${Boost_LIBRARIES} )
+# Add GTO_single application
+add_executable(tesp "${SRCROOT}/tespPropagation.cpp")
+setup_executable_target(tesp "${SRCROOT}")
+target_link_libraries(tesp ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} tesp_library ${Boost_LIBRARIES} )
 
-
-# Add GTO_optim application
-add_executable(application_GTO_optim "${SRCROOT}/GTO_optim.cpp")
-setup_executable_target(application_GTO_optim "${SRCROOT}")
-target_link_libraries(application_GTO_optim ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES} gto_utilities ${Boost_LIBRARIES} )
 
