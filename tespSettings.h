@@ -42,16 +42,20 @@ enum EventResponse {
 
 typedef boost::filesystem::path path;
 
+const double EARTH_AVERAGE_RADIUS = 6371010;  // m
 
 class TespSettings
 {
 protected:
+
     double initialPerigeeAltitude =                         -1;         // km, <0 = not defined
     double initialApogeeAltitude =                          -1;         // km, <0 = not defined
 
     path inputDirectory;
     path inputFileName;
     path inputPath;
+
+    path spaceWeatherFileRootDirectory;
 
     std::vector< path > includedPaths;
     path outputPath;
@@ -64,6 +68,7 @@ protected:
     std::string outputContentHeader( bool printIncludedFilePaths = true );
     std::string outputContentInputSettings();
     std::string outputContentOutputDescription();
+    std::string propagationTerminationCause();
     std::string outputContentOutputResults();
 
     std::string resultsText;
@@ -88,13 +93,15 @@ public:
     // To be defined after the propagation
 
     std::map< double, Eigen::VectorXd > resultsMap;
+    double propagationTime;
     double computationTime;
+    tudat::propagators::PropagationTerminationReason propagationTerminationReason;
 
 
     // In case the initial state has to be read from an output file in which the final Cartesian state is provided
 
     double maximumFinalEpoch() {
-        return std::min( endEpoch, initialEpoch + propagationPeriod * tudat::physical_constants::SIDEREAL_YEAR );
+        return std::min( endEpoch, initialEpoch + propagationPeriod );
     }
     bool resuming = false;
     double resumingEpoch = 0.0;
@@ -112,6 +119,8 @@ public:
     bool thirdBodyAttractionMoon =                          true;
 
     AtmosphericModel atmosphericModel =                     AtmosphericModel::nrlmsise00;
+    std::string spaceWeatherFileRelativePath =              "";
+    path spaceWeatherFilePath;
     bool atmosphericDrag =                                  true;
 
     bool solarRadiationPressure =                           true;
@@ -145,8 +154,8 @@ public:
     bool preloadCelestialBodiesData =                       true;
 
     double endEpoch =                                       504835200;  // seconds since J2000  ( = 31-Dec-2015 @ 12 )
-    double propagationPeriod =                              10.0;       // sidereal years
-    double reentryAltitude =                                0.0;        // m
+    double propagationPeriod = tudat::physical_constants::SIDEREAL_YEAR * 10.0;       // seconds
+    double reentryAltitude =                                0.0;        // km
 
     PropagatorType propagatorType =                         PropagatorType::cowell;
 
@@ -155,6 +164,19 @@ public:
     double integratorFixedStepsize =                        60.0;       // s
     double integratorInitialStepsize =                      60.0;       // s
     double integratorErrorTolerance =                       1.0E-12;    // -
+
+    // DSST specific settings
+    double altitudeLimitEarthAtmosphericDrag                     = 600.0;  // km
+    int numberOfQuadratureNodesEarthAtmosphericDrag              = 40;
+    bool scalableNumberOfQuadratureNodesEarthAtmosphericDrag     = true;
+    int numberOfQuadratureNodesSolarRadiationPressure            = 10;
+    bool scalableNumberOfQuadratureNodesSolarRadiationPressure   = false;
+    int SThirdBodyAttractionSun                                  = 2;
+    int NThirdBodyAttractionSun                                  = 2;
+    int SThirdBodyAttractionMoon                                 = 2;
+    int NThirdBodyAttractionMoon                                 = 2;
+    int SSolarRadiationPressure                                  = 2;
+    int NSolarRadiationPressure                                  = 2;
 
 
     // OUTPUT SETTINGS - CURRENT RUN
@@ -166,12 +188,38 @@ public:
 
     bool outputInputSettings =                              true;
     bool outputResultsColumnsDescriptions =                 true;
+    bool outputPropagationTime =                            true;
     bool outputComputationTime =                            true;
+    bool outputPropagationTerminationCause =                true;
 
     bool outputBodyKeplerianState =                         true;
     bool outputBodyCartesianState =                         false;
     bool outputSunPosition =                                false;
     bool outputMoonPosition =                               false;
+
+    bool outputDSSTMeanElementRates =                       false;
+    bool outputDSSTMeanElementRatesZonalTerms =             false;
+    bool outputDSSTMeanElementRatesSunGravity =             false;
+    bool outputDSSTMeanElementRatesMoonGravity =            false;
+    bool outputDSSTMeanElementRatesAtmosphericDrag =        false;
+    bool outputDSSTMeanElementRatesSolarRadiationPressure = false;
+
+    bool outputDSSTShortPeriodTerms =                       false;
+    bool outputDSSTShortPeriodTermsZonalTerms =             false;
+    bool outputDSSTShortPeriodTermsSunGravity =             false;
+    bool outputDSSTShortPeriodTermsMoonGravity =            false;
+    bool outputDSSTShortPeriodTermsAtmosphericDrag =        false;
+    bool outputDSSTShortPeriodTermsSolarRadiationPressure = false;
+
+    bool outputDSSTComputationTimes =                       false;
+    bool outputDSSTComputationTimesZonalTerms =             false;
+    bool outputDSSTComputationTimesSunGravity =             false;
+    bool outputDSSTComputationTimesMoonGravity =            false;
+    bool outputDSSTComputationTimesAtmosphericDrag =        false;
+    bool outputDSSTComputationTimesSolarRadiationPressure = false;
+
+    std::map< tudat::propagators::PropagationDependentVariables,
+    std::vector< tudat::propagators::sst::force_models::ForceIdentifier > > dsstOutputSettings;
 
     int outputOneInEveryIntegrationSteps =                  1;
     bool outputOnlyLastIntegrationStep =                    false;

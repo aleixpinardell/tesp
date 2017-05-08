@@ -16,6 +16,8 @@
 #include "graceGravityModels.h"
 #include "tabulatedDragCoefficients.h"
 
+#include "Tudat/Astrodynamics/Propagators/DSST/forces/zonalSphericalHarmonicGravity.h"
+
 
 int main( int argc, char* argv[] )
 {
@@ -40,6 +42,7 @@ int main( int argc, char* argv[] )
         using namespace tudat::gravitation;
         using namespace tudat::interpolators;
         using namespace tudat::input_output;
+        using namespace tudat::propagators::sst::force_models;
 
         using namespace tesp;
 
@@ -47,6 +50,8 @@ int main( int argc, char* argv[] )
         ////////////////////////////////////////////////////////////////////////////
         ///////////      READ SETTINGS FROM INPUT FILE       ///////////////////////
         ////////////////////////////////////////////////////////////////////////////
+
+        auto t_ini = std::chrono::steady_clock::now();
 
         std::string inputFilePath = argv[1];
         TespSettings settings( inputFilePath );
@@ -56,8 +61,6 @@ int main( int argc, char* argv[] )
             ////////////////////////////////////////////////////////////////////////
             //////           CREATE ENVIRONMENT          ///////////////////////////
             ////////////////////////////////////////////////////////////////////////
-
-            auto t_ini = std::chrono::steady_clock::now();
 
             // Load Spice kernels.
             spice_interface::loadSpiceKernelInTudat( input_output::getSpiceKernelPath( ) + "pck00009.tpc" );
@@ -108,8 +111,17 @@ int main( int argc, char* argv[] )
             }
             else
             {
-                bodySettings[ "Earth" ]->atmosphereSettings =
-                        boost::make_shared< AtmosphereSettings >( nrlmsise00 );
+                if ( settings.spaceWeatherFileRelativePath.length() > 0 )
+                {
+                    bodySettings[ "Earth" ]->atmosphereSettings =
+                            boost::make_shared< NRLMSISE00AtmosphereSettings >(
+                                settings.spaceWeatherFilePath.string() );
+                }
+                else
+                {
+                    bodySettings[ "Earth" ]->atmosphereSettings =
+                            boost::make_shared< AtmosphereSettings >( nrlmsise00 );
+                }
             }
 
             // MOON
@@ -158,7 +170,7 @@ int main( int argc, char* argv[] )
 
 
             // SRP interface
-            std::vector< std::string > occultingBodies = {};
+            std::vector< std::string > occultingBodies;
             if ( ! settings.ignoreEclipses )
             {
                 occultingBodies.push_back( "Earth" );
@@ -188,8 +200,17 @@ int main( int argc, char* argv[] )
             // Define propagation settings.
             std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfRocket;
 
-            accelerationsOfRocket[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >(
-                                                            settings.geopotentialDegree, settings.geopotentialOrder ) );
+            if ( settings.geopotentialDegree >= 2 )  // spherical harmonics
+            {
+                accelerationsOfRocket[ "Earth" ].push_back(
+                            boost::make_shared< SphericalHarmonicAccelerationSettings >(
+                                settings.geopotentialDegree, settings.geopotentialOrder ) );
+            }
+            else  // only central gravity
+            {
+                accelerationsOfRocket[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >(
+                                                                basic_astrodynamics::central_gravity ) );
+            }
 
             if ( settings.thirdBodyAttractionSun )
             {
@@ -229,8 +250,8 @@ int main( int argc, char* argv[] )
 
             // Set Keplerian elements for Rocket.
 
-            Vector6d bodyInitialState;
-            Vector6d bodyInitialStateKep;
+            Eigen::Vector6d bodyInitialState;
+            Eigen::Vector6d bodyInitialStateKep;
 
             double earthGravitationalParameter =
                     bodyMap.at( "Earth" )->getGravityFieldModel( )->getGravitationalParameter( );
@@ -261,6 +282,23 @@ int main( int argc, char* argv[] )
                         unit_conversions::convertDegreesToRadians( settings.initialLongitudeAscendingNode );
                 bodyInitialStateKep( trueAnomalyIndex ) =
                         unit_conversions::convertDegreesToRadians( settings.initialTrueAnomaly );
+
+                // Transform to mean elements
+                /* FIXME
+                if ( settings.propagatorType == dsst )
+                {
+                    const double mu = 3.986004415e14;
+                    const double J2 = 0.00108264;
+                    const double R  = 6378136.30;
+                    Eigen::Vector6d shortPeriodTermsDueToJ2 =
+                            sst::force_models::transformToOsculatingUsingJ2Contribution(
+                                bodyInitialStateKep, mu, J2, R ) - bodyInitialStateKep;
+
+                    // std::cout << shortPeriodTermsDueToJ2.transpose() << std::endl;
+
+                    bodyInitialStateKep -= shortPeriodTermsDueToJ2;
+                }
+                */
             }
 
             if ( ( settings.resuming && ! settings.resumingStateIsCartesian ) || ! settings.resuming )
@@ -279,43 +317,113 @@ int main( int argc, char* argv[] )
 
             if ( settings.reentryAltitude > 0 )
             {
+                /*if ( settings.atmosphericDrag )
+                {*/
                 // Altitude limit
-                boost::shared_ptr< PropagationTerminationSettings > altitudeTerminationSettings = boost::make_shared<
-                        propagators::PropagationDependentVariableTerminationSettings >(
+                boost::shared_ptr< PropagationTerminationSettings > altitudeTerminationSettings =
+                        boost::make_shared< propagators::PropagationDependentVariableTerminationSettings >(
                             boost::make_shared< propagators::SingleDependentVariableSaveSettings >(
-                                propagators::altitude_dependent_variable, "Body" ),
+                                propagators::periapsis_altitude_dependent_variable, "Body", "Earth" ),
                             settings.reentryAltitude * 1.0E3, 1 );
 
                 constituentSettings.push_back( altitudeTerminationSettings );
+                /*}
+                else
+                {
+                    std::cout << "Could not create a terminating condition based on an altitude limit because "
+                                 "atmospheric drag is turned off." << std::endl;
+                }*/
             }
 
             // Stop if ANY of the two is met
             boost::shared_ptr< PropagationTerminationSettings > terminationSettings = boost::make_shared<
                     propagators::PropagationHybridTerminationSettings >( constituentSettings, 1 );
 
-            // Save dependent variables
-            std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesToSave;
+            // Determine dependent variables to save
+            std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariables;
 
             if ( settings.outputSunPosition )
             {
-                dependentVariablesToSave.push_back( boost::make_shared< SingleDependentVariableSaveSettings >(
-                                                        relative_position_dependent_variable, "Sun", "Earth" ) );
+                dependentVariables.push_back( boost::make_shared< SingleDependentVariableSaveSettings >(
+                                                  relative_position_dependent_variable, "Sun", "Earth" ) );
             }
 
             if ( settings.outputMoonPosition )
             {
-                dependentVariablesToSave.push_back( boost::make_shared< SingleDependentVariableSaveSettings >(
-                                                        relative_position_dependent_variable, "Moon", "Earth" ) );
+                dependentVariables.push_back( boost::make_shared< SingleDependentVariableSaveSettings >(
+                                                  relative_position_dependent_variable, "Moon", "Earth" ) );
             }
 
+            // DSST output
+            for ( auto ent: settings.dsstOutputSettings )
+            {
+                PropagationDependentVariables dependentVariable = ent.first;
+                std::vector< ForceIdentifier > forceIDs = ent.second;
+                for ( ForceIdentifier forceID: forceIDs )
+                {
+                    if ( forceID == ForceIdentifier() )
+                    {
+                        dependentVariables.push_back(
+                                    boost::make_shared< SingleDependentVariableSaveSettings >(
+                                        dependentVariable, "Body" ) );
+                    }
+                    else
+                    {
+                        dependentVariables.push_back(
+                                    boost::make_shared< ForceIdentifiableDependentVariableSaveSettings >(
+                                        dependentVariable, "Body", forceID.body, forceID.type ) );
+                    }
+                }
+            }
+
+            // Create dependent variable save settings
             boost::shared_ptr< DependentVariableSaveSettings > dependentVariableSaveSettings =
-                    boost::make_shared< DependentVariableSaveSettings >( dependentVariablesToSave, 0 ) ;
+                    boost::make_shared< DependentVariableSaveSettings >( dependentVariables, 0 );
 
             // Translational propagator settings
-            boost::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
-                    boost::make_shared< TranslationalStatePropagatorSettings< double > > (
+            boost::shared_ptr< DSSTTranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
+                    boost::make_shared< DSSTTranslationalStatePropagatorSettings< double > > (
                         centralBodies, accelerationModelMap, bodiesToPropagate, bodyInitialState,
                         terminationSettings, settings.propagatorType );
+
+            // DSST specific settings
+            if ( settings.propagatorType == dsst )
+            {
+                // Settings for thrid-body attraction Sun
+                translationalPropagatorSettings->setForceModelSettings(
+                            ForceIdentifier( "Sun", third_body_central_gravity ),
+                            boost::make_shared< ConservativeSettings >(
+                                settings.SThirdBodyAttractionSun, settings.NThirdBodyAttractionSun ) );
+
+                // Settings for thrid-body attraction Sun
+                translationalPropagatorSettings->setForceModelSettings(
+                            ForceIdentifier( "Moon", third_body_central_gravity ),
+                            boost::make_shared< ConservativeSettings >(
+                                settings.SThirdBodyAttractionMoon, settings.NThirdBodyAttractionMoon ) );
+
+                // Settings for atmospheric drag caused by Earth
+                translationalPropagatorSettings->setForceModelSettings(
+                            ForceIdentifier( "Earth", aerodynamic ),
+                            boost::make_shared< AtmosphericDragSettings >(
+                                settings.altitudeLimitEarthAtmosphericDrag * 1.0E+3,
+                                settings.numberOfQuadratureNodesEarthAtmosphericDrag,
+                                settings.scalableNumberOfQuadratureNodesEarthAtmosphericDrag ) );
+
+                if ( settings.ignoreEclipses ) {
+                    // Settings for solar radiation pressure when eclipses ARE ignored (conservative)
+                    translationalPropagatorSettings->setForceModelSettings(
+                                ForceIdentifier( "Sun", cannon_ball_radiation_pressure ),
+                                boost::make_shared< ConservativeSettings >(
+                                    settings.SSolarRadiationPressure, settings.NSolarRadiationPressure ) );
+                } else {
+                    // Settings for solar radiation pressure when eclipses are NOT ignored (non-conservative)
+                    translationalPropagatorSettings->setForceModelSettings(
+                                ForceIdentifier( "Sun", cannon_ball_radiation_pressure ),
+                                boost::make_shared< RadiationPressureSettings >(
+                                    settings.numberOfQuadratureNodesSolarRadiationPressure,
+                                    settings.scalableNumberOfQuadratureNodesSolarRadiationPressure ) );
+                }
+            }
 
             // Create multiple propagator settings
             std::vector< boost::shared_ptr< PropagatorSettings< double > > > propagatorSettingsList;
@@ -337,13 +445,16 @@ int main( int argc, char* argv[] )
                 integratorSettings = boost::make_shared< RungeKuttaVariableStepSizeSettings< > >(
                             settings.integratorType, simulationStartEpoch, settings.integratorInitialStepsize,
                             settings.integratorSet, 1.0E-10, 1.0E+10, settings.integratorErrorTolerance,
-                            settings.integratorErrorTolerance, settings.outputOneInEveryIntegrationSteps );
+                            settings.integratorErrorTolerance, settings.outputOneInEveryIntegrationSteps,
+                            0.8, 100.0, 0.01 );
             }
 
 
             /////////////////////////////////////////////////////////////////////////////////
             //////////             PROPAGATE ORBIT            ///////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////
+
+            auto t_prop = std::chrono::steady_clock::now();
 
             // Create simulation object and propagate dynamics.
             SingleArcDynamicsSimulator< > dynamicsSimulator(
@@ -352,14 +463,15 @@ int main( int argc, char* argv[] )
             std::map< double, Eigen::VectorXd > integrationResult =
                     dynamicsSimulator.getEquationsOfMotionNumericalSolution( );
 
-            std::map< double, Eigen::Matrix< double, Eigen::Dynamic, 1 > > dependentVariableOutput =
-                    dynamicsSimulator.getDependentVariableHistory( );
-
-            // Determine total computation time
+            // Determine propagation time
             auto t_end = std::chrono::steady_clock::now();
-
+            double propagationTime =
+                    std::chrono::duration_cast< std::chrono::milliseconds >( t_end - t_prop ).count() * 1.0e-3;
             double computationTime =
                     std::chrono::duration_cast< std::chrono::milliseconds >( t_end - t_ini ).count() * 1.0e-3;
+
+            std::map< double, Eigen::Matrix< double, Eigen::Dynamic, 1 > > dependentVariableOutput =
+                    dynamicsSimulator.getDependentVariableHistory( );
 
             // double lastEpoch = ( --integrationResult.end() )->first;
 
@@ -389,7 +501,7 @@ int main( int argc, char* argv[] )
                     Eigen::VectorXd kepState( kepCols );
                     if ( settings.outputBodyKeplerianState )
                     {
-                        Vector6d carState = iter->second;
+                        Eigen::Vector6d carState = iter->second;
                         kepState = convertCartesianToKeplerianElements( carState, earthGravitationalParameter );
                     }
 
@@ -424,8 +536,10 @@ int main( int argc, char* argv[] )
                 }
             }
 
-            settings.computationTime = computationTime;
             settings.resultsMap = resultsMap;
+            settings.propagationTime = propagationTime;
+            settings.computationTime = computationTime;
+            settings.propagationTerminationReason = dynamicsSimulator.getPropagationTerminationReason();
             settings.exportResults();
             settings.propagationSucceeded();
         }

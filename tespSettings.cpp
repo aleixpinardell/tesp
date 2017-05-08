@@ -16,6 +16,7 @@
 #include <boost/filesystem.hpp>
 
 #include "tespSettings.h"
+#include "Tudat/Astrodynamics/BasicAstrodynamics/celestialBodyConstants.h"
 
 namespace tesp {
 
@@ -149,7 +150,7 @@ void assignDate( double &variable, std::string name, std::string value, EventRes
     // Check if the user provided a formatted date
     double formattedDate = false;
     boost::regex dateFormat(
-        R"((\d{4})-(\d{1,2})-(\d{1,2})(?: (\d{2}))?(?::(\d{2}))?(?::(\d{2}(?:.\d+)?))?)" );
+                R"((\d{4})-(\d{1,2})-(\d{1,2})(?: (\d{2}))?(?::(\d{2}))?(?::(\d{2}(?:.\d+)?))?)" );
     boost::smatch dateMatch;
     std::string tempValue = value;
     std::vector< double > dateComponents = { 2000, 1, 1, 12, 0, 0 };
@@ -187,7 +188,7 @@ void assignDate( double &variable, std::string name, std::string value, EventRes
 
             // Julina day number
             double JDN = day + floor( ( 153.0 * m + 2.0 ) / 5.0 ) + 365.0 * y + floor( y / 4.0 )
-                             - floor( y / 100.0 ) + floor( y / 400.0 ) - 32045.0;
+                    - floor( y / 100.0 ) + floor( y / 400.0 ) - 32045.0;
 
             // Julian day
             double JD = JDN + ( hour - 12.0 ) / 24.0 + minute / 1440.0 + second / 86400.0;
@@ -205,7 +206,6 @@ void assignDate( double &variable, std::string name, std::string value, EventRes
         variable = std::stod( value );
     }
 }
-
 
 
 void TespSettings::parseResultsFromOutputFile()
@@ -407,7 +407,7 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
             boost::smatch inputSettingsMatch;
             std::string tempinputSettingsText = input;
             while ( boost::regex_search( tempinputSettingsText, inputSettingsMatch, inputSettingsEx,
-                                       boost::match_not_dot_newline ) )
+                                         boost::match_not_dot_newline ) )
             {
                 std::cout << "a match!" << std::endl;
                 input = inputSettingsMatch[ 1 ];
@@ -532,7 +532,7 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
 
     // Handle initial perigee/apogee altitude
 
-    double Re = 6371.0; // km
+    double Re = EARTH_AVERAGE_RADIUS / 1e3; // km
     double sma = initialSemimajorAxis;
     double ecc = initialEccentricity;
     double hp = sma * ( 1 - ecc ) - Re;
@@ -597,8 +597,9 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
                                                             "GEOPOTENTIAL_ORDER",
                                                             "THIRD_BODY_ATTRACTION_SUN",
                                                             "THIRD_BODY_ATTRACTION_MOON",
-                                                            "ATMOSPHERIC_MODEL",
                                                             "ATMOSPHERIC_DRAG",
+                                                            "ATMOSPHERIC_MODEL",
+                                                            "SPACE_WEATHER_FILE_PATH",
                                                             "SOLAR_RADIATION_PRESSURE",
                                                             "IGNORE_ECLIPSES",
                                                             "BODY_MASS",
@@ -622,14 +623,45 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
                                                             "INTEGRATOR_FIXED_STEPSIZE",
                                                             "INTEGRATOR_INITIAL_STEPSIZE",
                                                             "INTEGRATOR_ERROR_TOLERANCE",
+                                                            "DSST_ALTITUDE_LIMIT_ATMOSPHERIC_DRAG",
+                                                            "DSST_QUADRATURE_NODES_ATMOSPHERIC_DRAG",
+                                                            "DSST_QUADRATURE_NODES_ATMOSPHERIC_DRAG_IS_SCALABLE",
+                                                            "DSST_QUADRATURE_NODES_SOLAR_RADIATION_PRESSURE",
+                                                            "DSST_QUADRATURE_NODES_SOLAR_RADIATION_PRESSURE_IS_SCALABLE",
+                                                            "DSST_THIRD_BODY_ATTRACTION_SUN_S",
+                                                            "DSST_THIRD_BODY_ATTRACTION_SUN_N",
+                                                            "DSST_THIRD_BODY_ATTRACTION_MOON_S",
+                                                            "DSST_THIRD_BODY_ATTRACTION_MOON_N",
+                                                            "DSST_SOLAR_RADIATION_PRESSURE_S",
+                                                            "DSST_SOLAR_RADIATION_PRESSURE_N",
                                                             "OUTPUT_NUMERIC_PRECISION",
                                                             "OUTPUT_INPUT_SETTINGS",
                                                             "OUTPUT_RESULTS_COLUMNS_DESCRIPTIONS",
+                                                            "OUTPUT_PROPAGATION_TIME",
                                                             "OUTPUT_COMPUTATION_TIME",
+                                                            "OUTPUT_PROPAGATION_TERMINATION_CAUSE",
                                                             "OUTPUT_BODY_KEPLERIAN_STATE",
                                                             "OUTPUT_BODY_CARTESIAN_STATE",
                                                             "OUTPUT_SUN_POSITION",
                                                             "OUTPUT_MOON_POSITION",
+                                                            "OUTPUT_DSST_MEAN_ELEMENT_RATES",
+                                                            "OUTPUT_DSST_MEAN_ELEMENT_RATES_ZONAL_TERMS",
+                                                            "OUTPUT_DSST_MEAN_ELEMENT_RATES_SUN_GRAVITY",
+                                                            "OUTPUT_DSST_MEAN_ELEMENT_RATES_MOON_GRAVITY",
+                                                            "OUTPUT_DSST_MEAN_ELEMENT_RATES_ATMOSPHERIC_DRAG",
+                                                            "OUTPUT_DSST_MEAN_ELEMENT_RATES_SOLAR_RADIATION_PRESSURE",
+                                                            "OUTPUT_DSST_SHORT_PERIOD_TERMS",
+                                                            "OUTPUT_DSST_SHORT_PERIOD_TERMS_ZONAL_TERMS",
+                                                            "OUTPUT_DSST_SHORT_PERIOD_TERMS_SUN_GRAVITY",
+                                                            "OUTPUT_DSST_SHORT_PERIOD_TERMS_MOON_GRAVITY",
+                                                            "OUTPUT_DSST_SHORT_PERIOD_TERMS_ATMOSPHERIC_DRAG",
+                                                            "OUTPUT_DSST_SHORT_PERIOD_TERMS_SOLAR_RADIATION_PRESSURE",
+                                                            "OUTPUT_DSST_COMPUTATION_TIMES",
+                                                            "OUTPUT_DSST_COMPUTATION_TIMES_ZONAL_TERMS",
+                                                            "OUTPUT_DSST_COMPUTATION_TIMES_SUN_GRAVITY",
+                                                            "OUTPUT_DSST_COMPUTATION_TIMES_MOON_GRAVITY",
+                                                            "OUTPUT_DSST_COMPUTATION_TIMES_ATMOSPHERIC_DRAG",
+                                                            "OUTPUT_DSST_COMPUTATION_TIMES_SOLAR_RADIATION_PRESSURE",
                                                             "OUTPUT_ONE_IN_EVERY_INTEGRATION_STEPS",
                                                             "OUTPUT_ONLY_LAST_INTEGRATION_STEP",
                                                             "OUTPUT_DIRECTORY_PATH",
@@ -717,6 +749,10 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
             {
                 assignBoolean( thirdBodyAttractionMoon, name, value, res );
             }
+            else if ( name == "ATMOSPHERIC_DRAG" )
+            {
+                assignBoolean( atmosphericDrag, name, value, res );
+            }
             else if ( name == "ATMOSPHERIC_MODEL" )
             {
                 if ( value == "EXPONENTIAL" )
@@ -732,9 +768,10 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
                     printWarningOrError( name, "value is not valid", nonValidValue );
                 }
             }
-            else if ( name == "ATMOSPHERIC_DRAG" )
+            else if ( name == "SPACE_WEATHER_FILE_PATH" )
             {
-                assignBoolean( atmosphericDrag, name, value, res );
+                spaceWeatherFileRelativePath = value;
+                spaceWeatherFileRootDirectory = definitionFilePath.parent_path();
             }
             else if ( name == "SOLAR_RADIATION_PRESSURE" )
             {
@@ -820,6 +857,10 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
                 {
                     propagatorType = PropagatorType::encke;
                 }
+                else if ( value == "DSST" )
+                {
+                    propagatorType = PropagatorType::dsst;
+                }
                 else
                 {
                     printWarningOrError( name, "value is not valid", nonValidValue );
@@ -868,6 +909,53 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
             {
                 assignInsideRange( integratorErrorTolerance, name, value, 0.0, 0.0, false, false, res, false, true );
             }
+            else if ( name == "DSST_ALTITUDE_LIMIT_ATMOSPHERIC_DRAG" )
+            {
+                assignInsideRange( altitudeLimitEarthAtmosphericDrag,
+                                   name, value, 0.0, 0.0, true, false, res, false, true );
+            }
+            else if ( name == "DSST_QUADRATURE_NODES_ATMOSPHERIC_DRAG" )
+            {
+                assignInsideRange( numberOfQuadratureNodesEarthAtmosphericDrag,
+                                   name, value, 1, 64, true, true, res );
+            }
+            else if ( name == "DSST_QUADRATURE_NODES_ATMOSPHERIC_DRAG_IS_SCALABLE" )
+            {
+                assignBoolean( scalableNumberOfQuadratureNodesEarthAtmosphericDrag, name, value, res );
+            }
+            else if ( name == "DSST_QUADRATURE_NODES_SOLAR_RADIATION_PRESSURE" )
+            {
+                assignInsideRange( numberOfQuadratureNodesSolarRadiationPressure,
+                                   name, value, 2, 64, true, true, res );
+            }
+            else if ( name == "DSST_QUADRATURE_NODES_SOLAR_RADIATION_PRESSURE_IS_SCALABLE" )
+            {
+                assignBoolean( scalableNumberOfQuadratureNodesSolarRadiationPressure, name, value, res );
+            }
+            else if ( name == "DSST_THIRD_BODY_ATTRACTION_SUN_S" )
+            {
+                assignInsideRange( SThirdBodyAttractionSun, name, value, 2, 0, true, false, res, false, true );
+            }
+            else if ( name == "DSST_THIRD_BODY_ATTRACTION_SUN_N" )
+            {
+                assignInsideRange( NThirdBodyAttractionSun, name, value, 2, 0, true, false, res, false, true );
+            }
+            else if ( name == "DSST_THIRD_BODY_ATTRACTION_MOON_S" )
+            {
+                assignInsideRange( SThirdBodyAttractionMoon, name, value, 2, 0, true, false, res, false, true );
+            }
+            else if ( name == "DSST_THIRD_BODY_ATTRACTION_MOON_N" )
+            {
+                assignInsideRange( NThirdBodyAttractionMoon, name, value, 2, 0, true, false, res, false, true );
+            }
+            else if ( name == "DSST_SOLAR_RADIATION_PRESSURE_S" )
+            {
+                assignInsideRange( SSolarRadiationPressure, name, value, 2, 0, true, false, res, false, true );
+            }
+            else if ( name == "DSST_SOLAR_RADIATION_PRESSURE_N" )
+            {
+                assignInsideRange( NSolarRadiationPressure, name, value, 2, 0, true, false, res, false, true );
+            }
             else if ( name == "OUTPUT_NUMERIC_PRECISION" )
             {
                 assignInsideRange( outputNumericPrecision, name, value, 1, 0, true, false, res, false, true );
@@ -880,9 +968,17 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
             {
                 assignBoolean( outputResultsColumnsDescriptions, name, value, res );
             }
+            else if ( name == "OUTPUT_PROPAGATION_TIME" )
+            {
+                assignBoolean( outputPropagationTime, name, value, res );
+            }
             else if ( name == "OUTPUT_COMPUTATION_TIME" )
             {
                 assignBoolean( outputComputationTime, name, value, res );
+            }
+            else if ( name == "OUTPUT_PROPAGATION_TERMINATION_CAUSE" )
+            {
+                assignBoolean( outputPropagationTerminationCause, name, value, res );
             }
             else if ( name == "OUTPUT_BODY_KEPLERIAN_STATE" )
             {
@@ -899,6 +995,78 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
             else if ( name == "OUTPUT_MOON_POSITION" )
             {
                 assignBoolean( outputMoonPosition, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_MEAN_ELEMENT_RATES" )
+            {
+                assignBoolean( outputDSSTMeanElementRates, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_MEAN_ELEMENT_RATES_ZONAL_TERMS" )
+            {
+                assignBoolean( outputDSSTMeanElementRatesZonalTerms, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_MEAN_ELEMENT_RATES_SUN_GRAVITY" )
+            {
+                assignBoolean( outputDSSTMeanElementRatesSunGravity, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_MEAN_ELEMENT_RATES_MOON_GRAVITY" )
+            {
+                assignBoolean( outputDSSTMeanElementRatesMoonGravity, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_MEAN_ELEMENT_RATES_ATMOSPHERIC_DRAG" )
+            {
+                assignBoolean( outputDSSTMeanElementRatesAtmosphericDrag, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_MEAN_ELEMENT_RATES_SOLAR_RADIATION_PRESSURE" )
+            {
+                assignBoolean( outputDSSTMeanElementRatesSolarRadiationPressure, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_SHORT_PERIOD_TERMS" )
+            {
+                assignBoolean( outputDSSTShortPeriodTerms, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_SHORT_PERIOD_TERMS_ZONAL_TERMS" )
+            {
+                assignBoolean( outputDSSTShortPeriodTermsZonalTerms, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_SHORT_PERIOD_TERMS_SUN_GRAVITY" )
+            {
+                assignBoolean( outputDSSTShortPeriodTermsSunGravity, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_SHORT_PERIOD_TERMS_MOON_GRAVITY" )
+            {
+                assignBoolean( outputDSSTShortPeriodTermsMoonGravity, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_SHORT_PERIOD_TERMS_ATMOSPHERIC_DRAG" )
+            {
+                assignBoolean( outputDSSTShortPeriodTermsAtmosphericDrag, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_SHORT_PERIOD_TERMS_SOLAR_RADIATION_PRESSURE" )
+            {
+                assignBoolean( outputDSSTShortPeriodTermsSolarRadiationPressure, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_COMPUTATION_TIMES" )
+            {
+                assignBoolean( outputDSSTComputationTimes, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_COMPUTATION_TIMES_ZONAL_TERMS" )
+            {
+                assignBoolean( outputDSSTComputationTimesZonalTerms, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_COMPUTATION_TIMES_SUN_GRAVITY" )
+            {
+                assignBoolean( outputDSSTComputationTimesSunGravity, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_COMPUTATION_TIMES_MOON_GRAVITY" )
+            {
+                assignBoolean( outputDSSTComputationTimesMoonGravity, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_COMPUTATION_TIMES_ATMOSPHERIC_DRAG" )
+            {
+                assignBoolean( outputDSSTComputationTimesAtmosphericDrag, name, value, res );
+            }
+            else if ( name == "OUTPUT_DSST_COMPUTATION_TIMES_SOLAR_RADIATION_PRESSURE" )
+            {
+                assignBoolean( outputDSSTComputationTimesSolarRadiationPressure, name, value, res );
             }
             else if ( name == "OUTPUT_ONE_IN_EVERY_INTEGRATION_STEPS" )
             {
@@ -977,15 +1145,102 @@ TespSettings::TespSettings( const std::string inputFilePath, const bool outputFi
         }
     }
 
+
+    // Create dsstOutputSettings
+
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::propagators;
+    using namespace tudat::propagators::sst::force_models;
+
+    if ( outputDSSTMeanElementRates ) {
+        dsstOutputSettings[ dsst_mean_element_rates ].push_back( ForceIdentifier() );
+    }
+    if ( outputDSSTMeanElementRatesZonalTerms ) {
+        dsstOutputSettings[ dsst_mean_element_rates ].push_back(
+                    ForceIdentifier( "Earth", spherical_harmonic_gravity ) );
+    }
+    if ( outputDSSTMeanElementRatesSunGravity ) {
+        dsstOutputSettings[ dsst_mean_element_rates ].push_back(
+                    ForceIdentifier( "Sun", third_body_central_gravity ) );
+    }
+    if ( outputDSSTMeanElementRatesMoonGravity ) {
+        dsstOutputSettings[ dsst_mean_element_rates ].push_back(
+                    ForceIdentifier( "Moon", third_body_central_gravity ) );
+    }
+    if ( outputDSSTMeanElementRatesAtmosphericDrag ) {
+        dsstOutputSettings[ dsst_mean_element_rates ].push_back(
+                    ForceIdentifier( "Earth", aerodynamic ) );
+    }
+    if ( outputDSSTMeanElementRatesSolarRadiationPressure ) {
+        dsstOutputSettings[ dsst_mean_element_rates ].push_back(
+                    ForceIdentifier( "Sun", cannon_ball_radiation_pressure ) );
+    }
+
+    if ( outputDSSTShortPeriodTerms ) {
+        dsstOutputSettings[ dsst_short_period_terms ].push_back( ForceIdentifier() );
+    }
+    if ( outputDSSTShortPeriodTermsZonalTerms ) {
+        dsstOutputSettings[ dsst_short_period_terms ].push_back(
+                    ForceIdentifier( "Earth", spherical_harmonic_gravity ) );
+    }
+    if ( outputDSSTShortPeriodTermsSunGravity ) {
+        dsstOutputSettings[ dsst_short_period_terms ].push_back(
+                    ForceIdentifier( "Sun", third_body_central_gravity ) );
+    }
+    if ( outputDSSTShortPeriodTermsMoonGravity ) {
+        dsstOutputSettings[ dsst_short_period_terms ].push_back(
+                    ForceIdentifier( "Moon", third_body_central_gravity ) );
+    }
+    if ( outputDSSTShortPeriodTermsAtmosphericDrag ) {
+        dsstOutputSettings[ dsst_short_period_terms ].push_back(
+                    ForceIdentifier( "Earth", aerodynamic ) );
+    }
+    if ( outputDSSTShortPeriodTermsSolarRadiationPressure ) {
+        dsstOutputSettings[ dsst_short_period_terms ].push_back(
+                    ForceIdentifier( "Sun", cannon_ball_radiation_pressure ) );
+    }
+
+    if ( outputDSSTComputationTimes ) {
+        dsstOutputSettings[ dsst_computation_times ].push_back( ForceIdentifier() );
+    }
+    if ( outputDSSTComputationTimesZonalTerms ) {
+        dsstOutputSettings[ dsst_computation_times ].push_back(
+                    ForceIdentifier( "Earth", spherical_harmonic_gravity ) );
+    }
+    if ( outputDSSTComputationTimesSunGravity ) {
+        dsstOutputSettings[ dsst_computation_times ].push_back(
+                    ForceIdentifier( "Sun", third_body_central_gravity ) );
+    }
+    if ( outputDSSTComputationTimesMoonGravity ) {
+        dsstOutputSettings[ dsst_computation_times ].push_back(
+                    ForceIdentifier( "Moon", third_body_central_gravity ) );
+    }
+    if ( outputDSSTComputationTimesAtmosphericDrag ) {
+        dsstOutputSettings[ dsst_computation_times ].push_back(
+                    ForceIdentifier( "Earth", aerodynamic ) );
+    }
+    if ( outputDSSTComputationTimesSolarRadiationPressure ) {
+        dsstOutputSettings[ dsst_computation_times ].push_back(
+                    ForceIdentifier( "Sun", cannon_ball_radiation_pressure ) );
+    }
+
+
     canonizePaths();
 }
 
 
 void TespSettings::canonizePaths()
 {
+    // Canonize space weather file path
+    if ( spaceWeatherFileRelativePath.length() > 0 )
+    {
+        spaceWeatherFilePath = boost::filesystem::canonical(
+                    path( spaceWeatherFileRelativePath ), spaceWeatherFileRootDirectory );
+    }
+
     // Update output file name
     outputFileName = boost::regex_replace( outputFileName, boost::regex( R"(\$FILENAME)" ),
-                                         inputFileName.string() );
+                                           inputFileName.string() );
     if ( outputFileName.find(".tespout") == std::string::npos )
     {
         outputFileName += ".tespout";
@@ -1033,9 +1288,9 @@ void addSectionTitleToStream( std::stringstream &stream, std::string title )
     stream << std::setfill( '%' );
     stream  << "\n"
             << "\n"
-            << std::right << std::setw(80) << "\n"
-            << std::left  << std::setw(79) << "% " + title + " " << "\n"
-            << std::right << std::setw(80) << "\n";
+            << std::right << std::setw(116) << "\n"
+            << std::left  << std::setw(115) << "% " + title + " " << "\n"
+            << std::right << std::setw(116) << "\n";
     stream << std::setfill( ' ' ) << std::left;
 }
 
@@ -1047,7 +1302,7 @@ void addSubsectionTitleToStream( std::stringstream &stream, std::string title )
 
 void addNameToStream( std::stringstream &stream, std::string name )
 {
-    stream << std::setw(50) << name;
+    stream << std::setw(64) << name;
 }
 
 void addCommentToStream( std::stringstream &stream, std::string comment )
@@ -1066,7 +1321,7 @@ void addColumnDescriptionsToStream( std::stringstream &stream, int &currentColum
     for ( unsigned int i = 0; i < descriptions.size(); i++ )
     {
         stream << "COLUMN " << std::setw(2) << currentColumn++ << "  =  " <<
-                  std::setw(40) << descriptions[ i ] << "% " << units[ i ] << "\n";
+                  std::setw(64) << descriptions[ i ] << "% " << units[ i ] << "\n";
     }
 }
 
@@ -1097,7 +1352,7 @@ void addToStream( std::stringstream &stream, std::string name, std::string value
     addNameToStream( stream, name );
     if ( quoted )
     {
-        stream << "\"" << value << "\" ";
+        stream << "'" << value << "' ";
     }
     else
     {
@@ -1161,8 +1416,13 @@ std::string TespSettings::outputContentInputSettings() {
     addToStream( stream, "THIRD_BODY_ATTRACTION_SUN",               thirdBodyAttractionSun );
     addToStream( stream, "THIRD_BODY_ATTRACTION_MOON",              thirdBodyAttractionMoon );
     std::vector< std::string > atmosphericModels = { "EXPONENTIAL", "", "NRLMSISE00" };
-    addToStream( stream, "ATMOSPHERIC_MODEL",                       atmosphericModel, atmosphericModels );
     addToStream( stream, "ATMOSPHERIC_DRAG",                        atmosphericDrag );
+    addToStream( stream, "ATMOSPHERIC_MODEL",                       atmosphericModel, atmosphericModels );
+    if ( spaceWeatherFileRelativePath.length() > 0 ) {
+        addToStream( stream, "SPACE_WEATHER_FILE_PATH",             spaceWeatherFilePath.string(), true );
+    } else {
+        addToStream( stream, "SPACE_WEATHER_FILE_PATH",             "", true );
+    }
     addToStream( stream, "SOLAR_RADIATION_PRESSURE",                solarRadiationPressure );
     addToStream( stream, "IGNORE_ECLIPSES",                         ignoreEclipses );
 
@@ -1194,10 +1454,10 @@ std::string TespSettings::outputContentInputSettings() {
 
     addSubsectionTitleToStream( stream, "PROPAGATION SETTINGS" );
     // addToStream( stream, "PRELOAD_CELESTIAL_BODIES_DATA",        preloadCelestialBodiesData );
-    addToStream( stream, "END_EPOCH",                               endEpoch, "seconds since J2000" );
-    addToStream( stream, "PROPAGATION_PERIOD",                      propagationPeriod, "sidereal years" );
+    addToStream( stream, "END_EPOCH",                               maximumFinalEpoch(), "seconds since J2000" );
+    addToStream( stream, "PROPAGATION_PERIOD",                      propagationPeriod, "seconds" );
     addToStream( stream, "REENTRY_ALTITUDE",                        reentryAltitude, "km" );
-    std::vector< std::string > propagatorTypes = { "COWELL", "ENCKE" };
+    std::vector< std::string > propagatorTypes = { "COWELL", "ENCKE", "DSST" };
     addToStream( stream, "PROPAGATOR_NAME",                         propagatorType, propagatorTypes );
     if ( integratorType == IntegratorType::rungeKutta4 ) {
         addToStream( stream, "INTEGRATOR_NAME",                     std::string( "RK4" ) );
@@ -1206,18 +1466,80 @@ std::string TespSettings::outputContentInputSettings() {
         std::vector< std::string > integratorSets = { "RK45", "RK56", "RK78", "DP78" };
         addToStream( stream, "INTEGRATOR_NAME",                     integratorSet, integratorSets );
         addToStream( stream, "INTEGRATOR_INITIAL_STEPSIZE",         integratorInitialStepsize, "s" );
-        addToStream( stream, "INTEGRATOR_ERROR_TOLERANCE",          integratorErrorTolerance );
+    }
+
+    if ( propagatorType == PropagatorType::dsst ) {
+        addSubsectionTitleToStream( stream, "DSST PROPAGATOR SETTINGS" );
+        addToStream( stream, "DSST_ALTITUDE_LIMIT_ATMOSPHERIC_DRAG",
+                     altitudeLimitEarthAtmosphericDrag, "km" );
+        addToStream( stream, "DSST_QUADRATURE_NODES_ATMOSPHERIC_DRAG",
+                     numberOfQuadratureNodesEarthAtmosphericDrag );
+        addToStream( stream, "DSST_QUADRATURE_NODES_ATMOSPHERIC_DRAG_IS_SCALABLE",
+                     scalableNumberOfQuadratureNodesEarthAtmosphericDrag );
+        addToStream( stream, "DSST_QUADRATURE_NODES_SOLAR_RADIATION_PRESSURE",
+                     numberOfQuadratureNodesSolarRadiationPressure );
+        addToStream( stream, "DSST_QUADRATURE_NODES_SOLAR_RADIATION_PRESSURE_IS_SCALABLE",
+                     scalableNumberOfQuadratureNodesSolarRadiationPressure );
+        addToStream( stream, "DSST_THIRD_BODY_ATTRACTION_SUN_S",  SThirdBodyAttractionSun );
+        addToStream( stream, "DSST_THIRD_BODY_ATTRACTION_SUN_N",  NThirdBodyAttractionSun );
+        addToStream( stream, "DSST_THIRD_BODY_ATTRACTION_MOON_S", SThirdBodyAttractionMoon );
+        addToStream( stream, "DSST_THIRD_BODY_ATTRACTION_MOON_N", NThirdBodyAttractionMoon );
+        addToStream( stream, "DSST_SOLAR_RADIATION_PRESSURE_S",   SSolarRadiationPressure );
+        addToStream( stream, "DSST_SOLAR_RADIATION_PRESSURE_N",   NSolarRadiationPressure );
     }
 
     addSubsectionTitleToStream( stream, "OUTPUT SETTINGS" );
     addToStream( stream, "OUTPUT_NUMERIC_PRECISION",                outputNumericPrecision );
+    addToStream( stream, "OUTPUT_PROPAGATION_TIME",                 outputPropagationTime );
     addToStream( stream, "OUTPUT_COMPUTATION_TIME",                 outputComputationTime );
+    addToStream( stream, "OUTPUT_PROPAGATION_TERMINATION_CAUSE",    outputPropagationTerminationCause );
     addToStream( stream, "OUTPUT_BODY_KEPLERIAN_STATE",             outputBodyKeplerianState );
     addToStream( stream, "OUTPUT_BODY_CARTESIAN_STATE",             outputBodyCartesianState );
     addToStream( stream, "OUTPUT_SUN_POSITION",                     outputSunPosition );
     addToStream( stream, "OUTPUT_MOON_POSITION",                    outputMoonPosition );
+
+    addToStream( stream, "OUTPUT_DSST_MEAN_ELEMENT_RATES",
+                 outputDSSTMeanElementRates );
+
+    addToStream( stream, "OUTPUT_DSST_MEAN_ELEMENT_RATES_ZONAL_TERMS",
+                 outputDSSTMeanElementRatesZonalTerms );
+    addToStream( stream, "OUTPUT_DSST_MEAN_ELEMENT_RATES_SUN_GRAVITY",
+                 outputDSSTMeanElementRatesSunGravity );
+    addToStream( stream, "OUTPUT_DSST_MEAN_ELEMENT_RATES_MOON_GRAVITY",
+                 outputDSSTMeanElementRatesMoonGravity );
+    addToStream( stream, "OUTPUT_DSST_MEAN_ELEMENT_RATES_ATMOSPHERIC_DRAG",
+                 outputDSSTMeanElementRatesAtmosphericDrag );
+    addToStream( stream, "OUTPUT_DSST_MEAN_ELEMENT_RATES_SOLAR_RADIATION_PRESSURE",
+                 outputDSSTMeanElementRatesSolarRadiationPressure );
+
+    addToStream( stream, "OUTPUT_DSST_SHORT_PERIOD_TERMS",
+                 outputDSSTShortPeriodTerms );
+    addToStream( stream, "OUTPUT_DSST_SHORT_PERIOD_TERMS_ZONAL_TERMS",
+                 outputDSSTShortPeriodTermsZonalTerms );
+    addToStream( stream, "OUTPUT_DSST_SHORT_PERIOD_TERMS_SUN_GRAVITY",
+                 outputDSSTShortPeriodTermsSunGravity );
+    addToStream( stream, "OUTPUT_DSST_SHORT_PERIOD_TERMS_MOON_GRAVITY",
+                 outputDSSTShortPeriodTermsMoonGravity );
+    addToStream( stream, "OUTPUT_DSST_SHORT_PERIOD_TERMS_ATMOSPHERIC_DRAG",
+                 outputDSSTShortPeriodTermsAtmosphericDrag );
+    addToStream( stream, "OUTPUT_DSST_SHORT_PERIOD_TERMS_SOLAR_RADIATION_PRESSURE",
+                 outputDSSTShortPeriodTermsSolarRadiationPressure );
+
+    addToStream( stream, "OUTPUT_DSST_COMPUTATION_TIMES",
+                 outputDSSTComputationTimes );
+    addToStream( stream, "OUTPUT_DSST_COMPUTATION_TIMES_ZONAL_TERMS",
+                 outputDSSTComputationTimesZonalTerms );
+    addToStream( stream, "OUTPUT_DSST_COMPUTATION_TIMES_SUN_GRAVITY",
+                 outputDSSTComputationTimesSunGravity );
+    addToStream( stream, "OUTPUT_DSST_COMPUTATION_TIMES_MOON_GRAVITY",
+                 outputDSSTComputationTimesMoonGravity );
+    addToStream( stream, "OUTPUT_DSST_COMPUTATION_TIMES_ATMOSPHERIC_DRAG",
+                 outputDSSTComputationTimesAtmosphericDrag );
+    addToStream( stream, "OUTPUT_DSST_COMPUTATION_TIMES_SOLAR_RADIATION_PRESSURE",
+                 outputDSSTComputationTimesSolarRadiationPressure );
+
     addToStream( stream, "OUTPUT_ONE_IN_EVERY_INTEGRATION_STEPS",   outputOneInEveryIntegrationSteps );
-    addToStream( stream, "OUTPUT_ONLY_LAST_INTEGRATION_STEP",      outputOnlyLastIntegrationStep );
+    addToStream( stream, "OUTPUT_ONLY_LAST_INTEGRATION_STEP",       outputOnlyLastIntegrationStep );
     // addToStream( stream, "OUTPUT_DIRECTORY_PATH",                   outputDirectoryPath, true );
     // addToStream( stream, "OUTPUT_FILE_NAME",                        outputFileName, true );
 
@@ -1271,7 +1593,86 @@ std::string TespSettings::outputContentOutputDescription() {
         addColumnDescriptionsToStream( stream, currentCol, descriptions, units );
     }
 
+
+    // DSST output description
+
+    using namespace tudat::basic_astrodynamics;
+    using namespace tudat::propagators;
+    using namespace tudat::propagators::sst::force_models;
+
+    std::vector< std::string > meanElementRatesUnits = { "m/s", "/s", "/s", "/s", "/s", "rad/s" };
+    std::vector< std::string > shortPeriodTermsUnits = { "m", "-", "-", "-", "-", "rad" };
+    std::vector< std::string > computationTimeUnits = { "s" };
+    std::vector< std::vector< std::string > > dsstUnits = { meanElementRatesUnits, shortPeriodTermsUnits,
+                                                            computationTimeUnits };
+
+    std::vector< std::string > dsstVariableNames = { "MEAN ELEMENT RATE", "SHORT PERIOD TERM", "COMPUTATION TIME" };
+    std::vector< std::string > dsstElementNames = { "a", "h", "k", "p", "q", "λ" };
+    std::vector< std::string > dsstContributionNames = { "TOTAL", "ZONAL TERMS", "SUN GRAVITY", "MOON GRAVITY",
+                                                     "ATMOSPHERIC DRAG", "SOLAR RADIATION PRESSURE" };
+
+    for ( auto ent: dsstOutputSettings )
+    {
+        PropagationDependentVariables dependentVariable = ent.first;
+        unsigned int variableIndex = 0;
+        switch ( dependentVariable ) {
+        case dsst_mean_element_rates: variableIndex = 0; break;
+        case dsst_short_period_terms: variableIndex = 1; break;
+        case dsst_computation_times:  variableIndex = 2; break;
+        default: break;
+        }
+
+        std::vector< ForceIdentifier > forceIDs = ent.second;
+        for ( ForceIdentifier forceID: forceIDs ) {
+            unsigned int contributionIndex = 0;
+            if ( forceID.body == "Moon" ) {
+                contributionIndex = 3;
+            } else {
+                switch ( forceID.type ) {
+                case spherical_harmonic_gravity:     contributionIndex = 1; break;
+                case third_body_central_gravity:     contributionIndex = 2; break;
+                case aerodynamic:                    contributionIndex = 4; break;
+                case cannon_ball_radiation_pressure: contributionIndex = 5; break;
+                default: break;
+                }
+            }
+
+            std::vector< std::string > units = dsstUnits[ variableIndex ];
+            std::vector< std::string > descriptions( units.size(), dsstVariableNames[ variableIndex ] );
+            for ( unsigned int i = 0; i < descriptions.size(); i++ ) {
+                descriptions[ i ] += " (" + dsstContributionNames[ contributionIndex ] + ")";
+                if ( dependentVariable == dsst_mean_element_rates ) {
+                    descriptions[ i ] += ": d" + dsstElementNames[ i ] + "/dt";
+                } else if ( dependentVariable == dsst_short_period_terms ) {
+                    descriptions[ i ] += ": " + dsstElementNames[ i ];
+                }
+            }
+            addColumnDescriptionsToStream( stream, currentCol, descriptions, units );
+        }
+    }
+
     return stream.str();
+}
+
+
+std::string TespSettings::propagationTerminationCause() {
+    using namespace tudat;
+    using namespace Eigen;
+
+    const double finalEpoch = ( --resultsMap.end() )->first;
+    if ( propagationTerminationReason == propagators::termination_condition_reached ) {
+        if ( finalEpoch >= endEpoch ) {
+            return "END_EPOCH_REACHED";
+        } else if ( finalEpoch - initialEpoch >= propagationPeriod ) {
+            return "MAXIMUM_PROPAGATION_PERIOD_REACHED";
+        } else {
+            return "REENTRY_ALTITUDE_REACHED";
+        }
+    } else if ( propagationTerminationReason == propagators::runtime_error_caught ) {
+        return "PROPAGATION_ERROR_THROWN";
+    } else {
+        return "UNKNOWN";
+    }
 }
 
 
@@ -1286,9 +1687,21 @@ std::string TespSettings::outputContentOutputResults() {
     stream << std::left << std::setprecision( outputNumericPrecision );
 
     // Get settings description and add computation time
+    if ( outputPropagationTime )
+    {
+        stream << "PROPAGATION_TIME = " << propagationTime << "  % s\n";
+    }
     if ( outputComputationTime )
     {
-        stream << "COMPUTATION_TIME = " << computationTime << "  % s\n\n";
+        stream << "COMPUTATION_TIME = " << computationTime << "  % s\n";
+    }
+    if ( outputPropagationTime || outputComputationTime )
+    {
+        stream << "\n";
+    }
+    if ( outputPropagationTerminationCause )
+    {
+        stream << "PROPAGATION_TERMINATION_CAUSE = " << propagationTerminationCause() << "\n\n";
     }
 
     // Iterate through map and add values to stream
@@ -1329,292 +1742,295 @@ bool TespSettings::checkRequestedOutputExists()
     // We don't want a corrupt output file to prevent the propagation from being carried out...
     /*try
     {*/
-        bool requestedOutputExists = false;
+    bool requestedOutputExists = false;
 
-        // Determine whether the requested output already exists
-        std::vector< path > candidatePaths;
+    // Determine whether the requested output already exists
+    std::vector< path > candidatePaths;
 
-        if ( searchOutputFilenamePattern.find(".tespout") == std::string::npos )
+    if ( searchOutputFilenamePattern.find(".tespout") == std::string::npos )
+    {
+        searchOutputFilenamePattern += ".tespout";
+    }
+    boost::regex filenamePattern( searchOutputFilenamePattern );
+
+    if ( searchInSubdirectories )
+    {
+        boost::filesystem::recursive_directory_iterator iter( searchOutputDirectoryPath );
+        boost::filesystem::recursive_directory_iterator iter_end;
+        for ( ; iter != iter_end; iter++ )
         {
-            searchOutputFilenamePattern += ".tespout";
+            // Skip if not a file
+            if( ! boost::filesystem::is_regular_file( iter->status() ) ) continue;
+
+            // Skip if no match
+            std::string filename = iter->path().filename().string();
+            boost::smatch match;
+            if ( ! boost::regex_search( filename, match, filenamePattern,
+                                        boost::match_not_dot_newline ) ) continue;
+
+            candidatePaths.push_back( iter->path() );
         }
-        boost::regex filenamePattern( searchOutputFilenamePattern );
-
-        if ( searchInSubdirectories )
+    }
+    else
+    {
+        boost::filesystem::directory_iterator iter( searchOutputDirectoryPath );
+        boost::filesystem::directory_iterator iter_end;
+        for ( ; iter != iter_end; iter++ )
         {
-            boost::filesystem::recursive_directory_iterator iter( searchOutputDirectoryPath );
-            boost::filesystem::recursive_directory_iterator iter_end;
-            for ( ; iter != iter_end; iter++ )
+            // Skip if not a file
+            if( ! boost::filesystem::is_regular_file( iter->status() ) ) continue;
+
+            // Skip if no match
+            std::string filename = iter->path().filename().string();
+            boost::smatch match;
+            if ( ! boost::regex_search( filename, match, filenamePattern,
+                                        boost::match_not_dot_newline ) ) continue;
+
+            candidatePaths.push_back( iter->path() );
+        }
+    }
+
+    // Determine if any of the candidates matches `this` (same input settings and at least same output requested)
+    path matchingCandidatePath;
+    TespSettings matchingCandidate;
+    for ( path &candidate : candidatePaths )
+    {
+        // Initialize specifying that it is an output file what is being read ( second argument = true )
+        TespSettings candidateSettings( candidate.string(), true );
+
+        // Continue to the next candidate if any of the comparisons fails
+        if ( ! searchIgnoreFileContents )
+        {
+            // ACCELERATION MODEL
+            if ( candidateSettings.geopotentialModel != geopotentialModel ) continue;
+            if ( candidateSettings.geopotentialDegree != geopotentialDegree ) continue;
+            if ( candidateSettings.geopotentialOrder != geopotentialOrder ) continue;
+            if ( candidateSettings.thirdBodyAttractionSun != thirdBodyAttractionSun ) continue;
+            if ( candidateSettings.thirdBodyAttractionMoon != thirdBodyAttractionMoon ) continue;
+            if ( candidateSettings.atmosphericModel != atmosphericModel ) continue;
+            if ( candidateSettings.atmosphericDrag != atmosphericDrag ) continue;
+            if ( candidateSettings.solarRadiationPressure != solarRadiationPressure ) continue;
+            if ( candidateSettings.ignoreEclipses != ignoreEclipses ) continue;
+
+            // BODY PROPERTIES
+            if ( candidateSettings.bodyMass != bodyMass ) continue;
+            if ( candidateSettings.bodyCrossSectionalArea != bodyCrossSectionalArea ) continue;
+            if ( candidateSettings.altitudeDependentDragCoefficient != altitudeDependentDragCoefficient )
+                continue;
+            if ( candidateSettings.bodyDragCoefficient != bodyDragCoefficient ) continue;
+            if ( candidateSettings.bodyRadiationPressureCoefficient != bodyRadiationPressureCoefficient )
+                continue;
+
+            // INITIAL STATE
+            if ( candidateSettings.initialEpoch != initialEpoch ) continue;
+            if ( candidateSettings.initialSemimajorAxis != initialSemimajorAxis ) continue;
+            if ( candidateSettings.initialEccentricity != initialEccentricity ) continue;
+            if ( candidateSettings.initialInclination != initialInclination ) continue;
+            if ( candidateSettings.initialArgumentPerigee != initialArgumentPerigee ) continue;
+            if ( candidateSettings.initialLongitudeAscendingNode != initialLongitudeAscendingNode ) continue;
+            if ( candidateSettings.initialTrueAnomaly != initialTrueAnomaly ) continue;
+            if ( candidateSettings.initialPerigeeAltitude != initialPerigeeAltitude ) continue;
+            if ( candidateSettings.initialApogeeAltitude != initialApogeeAltitude ) continue;
+
+            // PROPAGATION SETTINGS
+            if ( candidateSettings.maximumFinalEpoch() < maximumFinalEpoch()
+                 && ! allowResumingPropagationFromResults ) continue;
+            if ( candidateSettings.reentryAltitude != reentryAltitude ) continue;
+            if ( candidateSettings.propagatorType != propagatorType ) continue;
+            if ( candidateSettings.integratorType != integratorType ) continue;
+            if ( integratorType == IntegratorType::rungeKutta4 )
             {
-                // Skip if not a file
-                if( ! boost::filesystem::is_regular_file( iter->status() ) ) continue;
-
-                // Skip if no match
-                std::string filename = iter->path().filename().string();
-                boost::smatch match;
-                if ( ! boost::regex_search( filename, match, filenamePattern,
-                                            boost::match_not_dot_newline ) ) continue;
-
-                candidatePaths.push_back( iter->path() );
+                if ( candidateSettings.integratorFixedStepsize != integratorFixedStepsize ) continue;
             }
-        }
-        else
-        {
-            boost::filesystem::directory_iterator iter( searchOutputDirectoryPath );
-            boost::filesystem::directory_iterator iter_end;
-            for ( ; iter != iter_end; iter++ )
+            else
             {
-                // Skip if not a file
-                if( ! boost::filesystem::is_regular_file( iter->status() ) ) continue;
-
-                // Skip if no match
-                std::string filename = iter->path().filename().string();
-                boost::smatch match;
-                if ( ! boost::regex_search( filename, match, filenamePattern,
-                                          boost::match_not_dot_newline ) ) continue;
-
-                candidatePaths.push_back( iter->path() );
+                if ( candidateSettings.integratorSet != integratorSet ) continue;
+                if ( candidateSettings.integratorInitialStepsize != integratorInitialStepsize ) continue;
+                if ( candidateSettings.integratorErrorTolerance != integratorErrorTolerance ) continue;
             }
+
+            // OUTPUT SETTINGS
+            if ( candidateSettings.outputNumericPrecision < outputNumericPrecision ) continue;
+            if ( candidateSettings.outputPropagationTime < outputPropagationTime ) continue;
+            if ( candidateSettings.outputComputationTime < outputComputationTime ) continue;
+            if ( candidateSettings.outputBodyKeplerianState < outputBodyKeplerianState ) continue;
+            if ( candidateSettings.outputBodyCartesianState < outputBodyCartesianState ) continue;
+            if ( candidateSettings.outputSunPosition < outputSunPosition ) continue;
+            if ( candidateSettings.outputMoonPosition < outputMoonPosition ) continue;
+            if ( candidateSettings.outputOneInEveryIntegrationSteps != outputOneInEveryIntegrationSteps )
+                continue;
+            if ( candidateSettings.outputOnlyLastIntegrationStep > outputOnlyLastIntegrationStep ) continue;
         }
 
-        // Determine if any of the candidates matches `this` (same input settings and at least same output requested)
-        path matchingCandidatePath;
-        TespSettings matchingCandidate;
-        for ( path &candidate : candidatePaths )
+        // If no conditions has failed, then we've found a matching candidate
+        matchingCandidatePath = candidate;
+        matchingCandidate = candidateSettings;
+        requestedOutputExists = true;
+        break;
+    }
+
+    if ( requestedOutputExists )
+    {
+        // If can propagate further, but no states found in matching file, then start propagation from zero
+        if ( maximumFinalEpoch() > matchingCandidate.maximumFinalEpoch() &&
+             ! matchingCandidate.outputBodyCartesianState && ! matchingCandidate.outputBodyKeplerianState )
         {
-            // Initialize specifying that it is an output file what is being read ( second argument = true )
-            TespSettings candidateSettings( candidate.string(), true );
+            return false;
+        }
 
-            // Continue to the next candidate if any of the comparisons fails
-            if ( ! searchIgnoreFileContents )
+        // Determine if propagation is going to be resumed from output
+        resuming = allowResumingPropagationFromResults &&
+                matchingCandidate.maximumFinalEpoch() < maximumFinalEpoch() &&
+                ( matchingCandidate.outputBodyCartesianState || matchingCandidate.outputBodyKeplerianState );
+
+        // Warn if necessary
+        if ( skippingPropagation == warn && ! resuming )
+        {
+            std::cout << "Skipped propagation of: \"" << inputPath.string() << "\"" << std::endl;
+        }
+
+        // If output exists, the propagation is not going to be resumed and the file is the same, don't propagate
+        // Return true, i.e. tell the propagator that the output already exists, and it will do nothing
+        if ( ! resuming && ( matchingCandidatePath.string() == outputPath.string() ) )
+        {
+            return true;
+        }
+
+        // Generate output with a reference to file
+        if ( skippedPropagationOutput == reference && matchingCandidatePath != outputPath && ! resuming )
+        {
+            std::ofstream outputFile( outputPath.string() );
+            outputFile << outputContentHeader( false )
+                       << "% Requested results were found in an output file from a previous propagation:\n"
+                       << "% " << matchingCandidatePath.string() << "\n"
+                       << "% \n";
+            outputFile.close();
+        }
+        else if ( skippedPropagationOutput != none ) // or duplicate file, resume, etc.
+        {
+            // Change the matchingCandidate paths to the ones for the current run
+            matchingCandidate.inputPath = inputPath;
+            matchingCandidate.inputDirectory = inputDirectory;
+            matchingCandidate.inputFileName = inputFileName;
+            matchingCandidate.outputDirectoryPath = outputDirectoryPath;
+            matchingCandidate.outputFileName = outputFileName;
+            matchingCandidate.outputRootDirectory = outputRootDirectory;
+            matchingCandidate.searchOutputRootDirectory = searchOutputRootDirectory;
+            matchingCandidate.canonizePaths();
+
+            // Define duplicate original source path so that it can be indicated in the new file header
+            matchingCandidate.duplicateSourcePath = matchingCandidatePath;
+
+            // Update results: only duplicate those requested for this run
+            matchingCandidate.parseResultsFromOutputFile();
+
+            std::vector< bool > candidateOutputs = {
+                matchingCandidate.outputBodyKeplerianState, matchingCandidate.outputBodyCartesianState,
+                matchingCandidate.outputSunPosition, matchingCandidate.outputMoonPosition };
+
+            std::vector< bool > outputs = { outputBodyKeplerianState, outputBodyCartesianState,
+                                            outputSunPosition, outputMoonPosition };
+
+            std::vector< int > outputsLengths = { 6, 6, 3, 3 };
+
+            std::vector< int > candidateStartIndexes;
+            std::vector< int > startIndexes;
+
+            int currentCandidateStartIndex = 0;
+            int currentStartIndex = 0;
+            for ( unsigned int o = 0; o < outputsLengths.size(); o++ )
             {
-                // ACCELERATION MODEL
-                if ( candidateSettings.geopotentialModel != geopotentialModel ) continue;
-                if ( candidateSettings.geopotentialDegree != geopotentialDegree ) continue;
-                if ( candidateSettings.geopotentialOrder != geopotentialOrder ) continue;
-                if ( candidateSettings.thirdBodyAttractionSun != thirdBodyAttractionSun ) continue;
-                if ( candidateSettings.thirdBodyAttractionMoon != thirdBodyAttractionMoon ) continue;
-                if ( candidateSettings.atmosphericModel != atmosphericModel ) continue;
-                if ( candidateSettings.atmosphericDrag != atmosphericDrag ) continue;
-                if ( candidateSettings.solarRadiationPressure != solarRadiationPressure ) continue;
-                if ( candidateSettings.ignoreEclipses != ignoreEclipses ) continue;
-
-                // BODY PROPERTIES
-                if ( candidateSettings.bodyMass != bodyMass ) continue;
-                if ( candidateSettings.bodyCrossSectionalArea != bodyCrossSectionalArea ) continue;
-                if ( candidateSettings.altitudeDependentDragCoefficient != altitudeDependentDragCoefficient )
-                    continue;
-                if ( candidateSettings.bodyDragCoefficient != bodyDragCoefficient ) continue;
-                if ( candidateSettings.bodyRadiationPressureCoefficient != bodyRadiationPressureCoefficient )
-                    continue;
-
-                // INITIAL STATE
-                if ( candidateSettings.initialEpoch != initialEpoch ) continue;
-                if ( candidateSettings.initialSemimajorAxis != initialSemimajorAxis ) continue;
-                if ( candidateSettings.initialEccentricity != initialEccentricity ) continue;
-                if ( candidateSettings.initialInclination != initialInclination ) continue;
-                if ( candidateSettings.initialArgumentPerigee != initialArgumentPerigee ) continue;
-                if ( candidateSettings.initialLongitudeAscendingNode != initialLongitudeAscendingNode ) continue;
-                if ( candidateSettings.initialTrueAnomaly != initialTrueAnomaly ) continue;
-                if ( candidateSettings.initialPerigeeAltitude != initialPerigeeAltitude ) continue;
-                if ( candidateSettings.initialApogeeAltitude != initialApogeeAltitude ) continue;
-
-                // PROPAGATION SETTINGS
-                if ( candidateSettings.maximumFinalEpoch() < maximumFinalEpoch()
-                     && ! allowResumingPropagationFromResults ) continue;
-                if ( candidateSettings.reentryAltitude != reentryAltitude ) continue;
-                if ( candidateSettings.propagatorType != propagatorType ) continue;
-                if ( candidateSettings.integratorType != integratorType ) continue;
-                if ( integratorType == IntegratorType::rungeKutta4 )
+                if ( candidateOutputs[ o ] )
                 {
-                    if ( candidateSettings.integratorFixedStepsize != integratorFixedStepsize ) continue;
+                    candidateStartIndexes.push_back( currentCandidateStartIndex );
+                    currentCandidateStartIndex += outputsLengths[ o ];
                 }
                 else
                 {
-                    if ( candidateSettings.integratorSet != integratorSet ) continue;
-                    if ( candidateSettings.integratorInitialStepsize != integratorInitialStepsize ) continue;
-                    if ( candidateSettings.integratorErrorTolerance != integratorErrorTolerance ) continue;
+                    candidateStartIndexes.push_back( -1 );
                 }
-
-                // OUTPUT SETTINGS
-                if ( candidateSettings.outputNumericPrecision < outputNumericPrecision ) continue;
-                if ( candidateSettings.outputComputationTime < outputComputationTime ) continue;
-                if ( candidateSettings.outputBodyKeplerianState < outputBodyKeplerianState ) continue;
-                if ( candidateSettings.outputBodyCartesianState < outputBodyCartesianState ) continue;
-                if ( candidateSettings.outputSunPosition < outputSunPosition ) continue;
-                if ( candidateSettings.outputMoonPosition < outputMoonPosition ) continue;
-                if ( candidateSettings.outputOneInEveryIntegrationSteps != outputOneInEveryIntegrationSteps )
-                        continue;
-                if ( candidateSettings.outputOnlyLastIntegrationStep > outputOnlyLastIntegrationStep ) continue;
-            }
-
-            // If no conditions has failed, then we've found a matching candidate
-            matchingCandidatePath = candidate;
-            matchingCandidate = candidateSettings;
-            requestedOutputExists = true;
-            break;
-        }
-
-        if ( requestedOutputExists )
-        {
-            // If can propagate further, but no states found in matching file, then start propagation from zero
-            if ( maximumFinalEpoch() > matchingCandidate.maximumFinalEpoch() &&
-                 ! matchingCandidate.outputBodyCartesianState && ! matchingCandidate.outputBodyKeplerianState )
-            {
-                return false;
-            }
-
-            // Determine if propagation is going to be resumed from output
-            resuming = allowResumingPropagationFromResults &&
-                    matchingCandidate.maximumFinalEpoch() < maximumFinalEpoch() &&
-                    ( matchingCandidate.outputBodyCartesianState || matchingCandidate.outputBodyKeplerianState );
-
-            // Warn if necessary
-            if ( skippingPropagation == warn && ! resuming )
-            {
-                std::cout << "Skipped propagation of: \"" << inputPath.string() << "\"" << std::endl;
-            }
-
-            // If output exists, the propagation is not going to be resumed and the file is the same, don't propagate
-            // Return true, i.e. tell the propagator that the output already exists, and it will do nothing
-            if ( ! resuming && ( matchingCandidatePath.string() == outputPath.string() ) )
-            {
-                return true;
-            }
-
-            // Generate output with a reference to file
-            if ( skippedPropagationOutput == reference && matchingCandidatePath != outputPath && ! resuming )
-            {
-                std::ofstream outputFile( outputPath.string() );
-                outputFile << outputContentHeader( false )
-                           << "% Requested results were found in an output file from a previous propagation:\n"
-                           << "% " << matchingCandidatePath.string() << "\n"
-                           << "% \n";
-                outputFile.close();
-            }
-            else if ( skippedPropagationOutput != none ) // or duplicate file, resume, etc.
-            {
-                // Change the matchingCandidate paths to the ones for the current run
-                matchingCandidate.inputPath = inputPath;
-                matchingCandidate.inputDirectory = inputDirectory;
-                matchingCandidate.inputFileName = inputFileName;
-                matchingCandidate.outputDirectoryPath = outputDirectoryPath;
-                matchingCandidate.outputFileName = outputFileName;
-                matchingCandidate.outputRootDirectory = outputRootDirectory;
-                matchingCandidate.searchOutputRootDirectory = searchOutputRootDirectory;
-                matchingCandidate.canonizePaths();
-
-                // Define duplicate original source path so that it can be indicated in the new file header
-                matchingCandidate.duplicateSourcePath = matchingCandidatePath;
-
-                // Update results: only duplicate those requested for this run
-                matchingCandidate.parseResultsFromOutputFile();
-
-                std::vector< bool > candidateOutputs = {
-                    matchingCandidate.outputBodyKeplerianState, matchingCandidate.outputBodyCartesianState,
-                    matchingCandidate.outputSunPosition, matchingCandidate.outputMoonPosition };
-
-                std::vector< bool > outputs = { outputBodyKeplerianState, outputBodyCartesianState,
-                                                outputSunPosition, outputMoonPosition };
-
-                std::vector< int > outputsLengths = { 6, 6, 3, 3 };
-
-                std::vector< int > candidateStartIndexes;
-                std::vector< int > startIndexes;
-
-                int currentCandidateStartIndex = 0;
-                int currentStartIndex = 0;
-                for ( unsigned int o = 0; o < outputsLengths.size(); o++ )
+                if ( outputs[ o ] )
                 {
-                    if ( candidateOutputs[ o ] )
-                    {
-                        candidateStartIndexes.push_back( currentCandidateStartIndex );
-                        currentCandidateStartIndex += outputsLengths[ o ];
-                    }
-                    else
-                    {
-                        candidateStartIndexes.push_back( -1 );
-                    }
-                    if ( outputs[ o ] )
-                    {
-                        startIndexes.push_back( currentStartIndex );
-                        currentStartIndex += outputsLengths[ o ];
-                    }
-                    else
-                    {
-                        startIndexes.push_back( -1 );
-                    }
+                    startIndexes.push_back( currentStartIndex );
+                    currentStartIndex += outputsLengths[ o ];
                 }
-
-
-                // Populate new results map (only those requested by the user)
-
-                std::map< double, Eigen::VectorXd > requestedResultsMap;
-                for( std::map< double, Eigen::VectorXd >::iterator iter = matchingCandidate.resultsMap.begin();
-                     iter != matchingCandidate.resultsMap.end(); ++iter )
+                else
                 {
-                    if ( ! outputOnlyLastIntegrationStep /*|| iter == --matchingCandidate.resultsMap.end()*/ )
-                    {
-                        double epoch = iter->first;
+                    startIndexes.push_back( -1 );
+                }
+            }
 
-                        Eigen::VectorXd oldResult = iter->second;
-                        Eigen::VectorXd requestedResult( currentStartIndex );
-                        for ( unsigned int j = 0; j < outputs.size(); j++ )
+
+            // Populate new results map (only those requested by the user)
+
+            std::map< double, Eigen::VectorXd > requestedResultsMap;
+            for( std::map< double, Eigen::VectorXd >::iterator iter = matchingCandidate.resultsMap.begin();
+                 iter != matchingCandidate.resultsMap.end(); ++iter )
+            {
+                if ( ! outputOnlyLastIntegrationStep /*|| iter == --matchingCandidate.resultsMap.end()*/ )
+                {
+                    double epoch = iter->first;
+
+                    Eigen::VectorXd oldResult = iter->second;
+                    Eigen::VectorXd requestedResult( currentStartIndex );
+                    for ( unsigned int j = 0; j < outputs.size(); j++ )
+                    {
+                        if ( outputs[ j ] ) // if this specific output has been requested, get if from old output
                         {
-                            if ( outputs[ j ] ) // if this specific output has been requested, get if from old output
-                            {
-                                requestedResult << oldResult.segment ( candidateStartIndexes[ j ],
-                                                                       outputsLengths[ j ] );
-                            }
+                            requestedResult << oldResult.segment ( candidateStartIndexes[ j ],
+                                                                   outputsLengths[ j ] );
                         }
-                        requestedResultsMap[ epoch ] = requestedResult;
-
-                        if ( epoch > maximumFinalEpoch() ) break;
                     }
-                }
-                resultsMap = requestedResultsMap;
+                    requestedResultsMap[ epoch ] = requestedResult;
 
-
-                // Handle resume propagation from output
-                if ( resuming )
-                {
-                    if ( resumingPropagationFromOutput == warn )
-                    {
-                        std::cout << "Resuming propagation defined in input file \""
-                                  << inputPath.string() << "\" from the results found in output file \""
-                                  << matchingCandidatePath.string() << "\"" << std::endl;
-                    }
-
-                    double lastEpoch = (--matchingCandidate.resultsMap.end())->first;
-                    Eigen::VectorXd lastVector = (--matchingCandidate.resultsMap.end())->second;
-
-                    resumingEpoch = lastEpoch;
-
-                    resumingState = lastVector.segment< 6 >(
-                                candidateStartIndexes[ ! matchingCandidate.outputBodyKeplerianState ] );
-                    resumingStateIsCartesian = ! matchingCandidate.outputBodyKeplerianState;
-                }
-
-
-                // Duplicate file
-                if ( ! resuming )
-                {
-                    // Update requested output variables
-
-                    matchingCandidate.outputNumericPrecision = outputNumericPrecision;
-                    matchingCandidate.outputComputationTime = outputComputationTime;
-                    matchingCandidate.outputBodyKeplerianState = outputBodyKeplerianState;
-                    matchingCandidate.outputBodyCartesianState = outputBodyCartesianState;
-                    matchingCandidate.outputSunPosition = outputSunPosition;
-                    matchingCandidate.outputMoonPosition = outputMoonPosition;
-                    matchingCandidate.outputOnlyLastIntegrationStep = outputOnlyLastIntegrationStep;
-
-                    matchingCandidate.exportResults();
+                    if ( epoch > maximumFinalEpoch() ) break;
                 }
             }
-        }
+            resultsMap = requestedResultsMap;
 
-        return requestedOutputExists && ! resuming;
+
+            // Handle resume propagation from output
+            if ( resuming )
+            {
+                if ( resumingPropagationFromOutput == warn )
+                {
+                    std::cout << "Resuming propagation defined in input file \""
+                              << inputPath.string() << "\" from the results found in output file \""
+                              << matchingCandidatePath.string() << "\"" << std::endl;
+                }
+
+                double lastEpoch = (--matchingCandidate.resultsMap.end())->first;
+                Eigen::VectorXd lastVector = (--matchingCandidate.resultsMap.end())->second;
+
+                resumingEpoch = lastEpoch;
+
+                resumingState = lastVector.segment< 6 >(
+                            candidateStartIndexes[ ! matchingCandidate.outputBodyKeplerianState ] );
+                resumingStateIsCartesian = ! matchingCandidate.outputBodyKeplerianState;
+            }
+
+
+            // Duplicate file
+            if ( ! resuming )
+            {
+                // Update requested output variables
+
+                matchingCandidate.outputNumericPrecision = outputNumericPrecision;
+                matchingCandidate.outputPropagationTime = outputPropagationTime;
+                matchingCandidate.outputComputationTime = outputComputationTime;
+                matchingCandidate.outputBodyKeplerianState = outputBodyKeplerianState;
+                matchingCandidate.outputBodyCartesianState = outputBodyCartesianState;
+                matchingCandidate.outputSunPosition = outputSunPosition;
+                matchingCandidate.outputMoonPosition = outputMoonPosition;
+                // FIXME: add missing output settings
+                matchingCandidate.outputOnlyLastIntegrationStep = outputOnlyLastIntegrationStep;
+
+                matchingCandidate.exportResults();
+            }
+        }
+    }
+
+    return requestedOutputExists && ! resuming;
     /*}
     catch ( ... )
     {
