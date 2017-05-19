@@ -42,7 +42,7 @@ enum EventResponse {
 
 typedef boost::filesystem::path path;
 
-const double EARTH_AVERAGE_RADIUS = 6371010;  // m
+const double EARTH_AVERAGE_RADIUS = 6371000;  // m
 
 class TespSettings
 {

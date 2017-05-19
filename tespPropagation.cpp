@@ -342,6 +342,11 @@ int main( int argc, char* argv[] )
             // Determine dependent variables to save
             std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariables;
 
+            /* FIXME
+            dependentVariables.push_back( boost::make_shared< SingleDependentVariableSaveSettings >(
+                                              local_density_dependent_variable, "Body" ) );
+            */
+
             if ( settings.outputSunPosition )
             {
                 dependentVariables.push_back( boost::make_shared< SingleDependentVariableSaveSettings >(

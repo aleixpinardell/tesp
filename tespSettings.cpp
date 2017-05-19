@@ -1466,6 +1466,7 @@ std::string TespSettings::outputContentInputSettings() {
         std::vector< std::string > integratorSets = { "RK45", "RK56", "RK78", "DP78" };
         addToStream( stream, "INTEGRATOR_NAME",                     integratorSet, integratorSets );
         addToStream( stream, "INTEGRATOR_INITIAL_STEPSIZE",         integratorInitialStepsize, "s" );
+        addToStream( stream, "INTEGRATOR_ERROR_TOLERANCE",          integratorErrorTolerance );
     }
 
     if ( propagatorType == PropagatorType::dsst ) {
